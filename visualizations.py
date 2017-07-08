@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.tree import export_graphviz
+import subprocess
+import warnings
 
 def filter_data(data, condition):
     """
@@ -60,7 +63,7 @@ def survival_stats(data, outcomes, key, filters = []):
 
     # Merge data and outcomes into single dataframe
     all_data = pd.concat([data, outcomes], axis = 1)
-    
+    # print all_data.head()
     # Apply filters to data
     for condition in filters:
         all_data = filter_data(all_data, condition)
@@ -97,7 +100,9 @@ def survival_stats(data, outcomes, key, filters = []):
         # Overlay each bin's survival rates
         nonsurv_vals = all_data[all_data['Survived'] == 0][key].reset_index(drop = True)
         surv_vals = all_data[all_data['Survived'] == 1][key].reset_index(drop = True)
-       
+        # print key
+        # print nonsurv_vals
+        # print surv_vals
         colors=['red','green'];
         labels=['Did not survive', 'Survived'];
         nonsurv_vals=np.array(nonsurv_vals)
@@ -127,16 +132,21 @@ def survival_stats(data, outcomes, key, filters = []):
         if(key == 'Sex'):
             values = ['male', 'female']
 
+        if (key=='Title'):
+            values=['Master','Miss','Mrs','Mr','Others']
+        
         # Create DataFrame containing categories and count of each
+        
         frame = pd.DataFrame(index = np.arange(len(values)), columns=(key,'Survived','NSurvived'))
         for i, value in enumerate(values):
+            # print len(all_data[(all_data['Survived'] == 1) & (all_data[key] == value)])
             frame.loc[i] = [value, \
                    len(all_data[(all_data['Survived'] == 1) & (all_data[key] == value)]), \
                    len(all_data[(all_data['Survived'] == 0) & (all_data[key] == value)])]
 
         # Set the width of each bar
         bar_width = 0.4
-
+        # print frame.head()
         # Display each category's survival rates
         for i in np.arange(len(frame)):
             nonsurv_bar = plt.bar(i-bar_width, frame.loc[i]['NSurvived'], width = bar_width, color = 'r')
@@ -187,6 +197,64 @@ def accuracy_stats(scores,intuitive):
     axes.set_xticklabels(tickmarks);
     axes.set_xlabel('Model');
     axes.set_ylabel('Percentage of accuracy score');
-    plt.show()  
+    # plt.show()  
+
+def visualize_tree(tree,features_list,filename='dt'):
+    """Create tree png using graphviz.
+
+    Args
+    ----
+    tree -- scikit-learn DecsisionTree.
+    feature_names -- list of feature names.
+    """
+    command = ["dot", "-Tpng", "plots/dt_titanic.dot", "-o", "plots/dt_titanic.png"];
+    try:
+        with open("plots/%s_titanic.dot"%filename, 'w') as f:
+            export_graphviz(tree, out_file=f, feature_names=features_list,filled=True, rounded=True,  special_characters=True);
+       
+    except:
+        # Creates a directory if the plots directory does not exista
+        subprocess.call(["mkdir", "plots"],shell=True);
+        with open("plots/%s_titanic.dot"%filename, 'w') as f:
+            export_graphviz(tree, out_file=f, feature_names=features_list,filled=True, rounded=True,  special_characters=True);
+
+    try:
+        subprocess.check_call(command,shell=True);
+    except:
+        warnings.warn("Could not run dot, ie graphviz, to "
+             "produce visualization. Do it manually on terminal (such as cygwin)")
+
+def pca_results(good_data, pca):
+    '''
+    Create a DataFrame of the PCA results
+    Includes dimension feature weights and explained variance
+    Visualizes the PCA results
+    '''
+
+    # Dimension indexing
+    dimensions = dimensions = ['Dimension {}'.format(i) for i in range(1,len(pca.components_)+1)]
+
+    # PCA components
+    components = pd.DataFrame(np.round(pca.components_, 4), columns = good_data.keys())
+    components.index = dimensions
+
+    # PCA explained variance
+    ratios = pca.explained_variance_ratio_.reshape(len(pca.components_), 1)
+    variance_ratios = pd.DataFrame(np.round(ratios, 4), columns = ['Explained Variance'])
+    variance_ratios.index = dimensions
+
+    # Create a bar plot visualization
+    fig, ax = plt.subplots(figsize = (14,8))
+
+    # Plot the feature weights as a function of the components
+    components.plot(ax = ax, kind = 'bar');
+    ax.set_ylabel("Feature Weights")
+    ax.set_xticklabels(dimensions, rotation=0)
 
 
+    # Display the explained variance ratios
+    for i, ev in enumerate(pca.explained_variance_ratio_):
+        ax.text(i-0.40, ax.get_ylim()[1] + 0.05, "Explained Variance\n          %.4f"%(ev))
+
+    # Return a concatenated DataFrame
+    return pd.concat([variance_ratios, components], axis = 1)

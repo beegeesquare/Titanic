@@ -14,7 +14,8 @@ import pandas as pd
 import subprocess
 import warnings
 #from sklearn.cross_validation import cross_val_score
-from sklearn.metrics import f1_score
+# from sklearn.metrics import f1_score
+from sklearn.metrics import accuracy_score
 
 feature_cols = list(data.columns);
 
@@ -69,6 +70,10 @@ def preprocess_features(X):
     
     return output
 
+
+# Before we preprocess the data
+
+
 X=preprocess_features(data);
 
 print "Processed feature columns ({} total features):\n{}".format(len(X.columns), list(X.columns))
@@ -85,7 +90,7 @@ Y_predict= clf_A.predict(X);
 # Step-3: Calculate the F1-score for the predicted values on the training set
 # F1-score: 2*recall*precision/(recall+precision);
 # recall= 
-print 'F1-score on the training set using DT classifier is {0:.4f}'.format(f1_score(outcomes,Y_predict));
+print 'Accuracy-score on the training set using DT classifier is {0:.4f}'.format(accuracy_score(outcomes,Y_predict));
 
 # Visualize the Decision Tree graph:
 def visualize_tree(tree,features_list):
@@ -98,13 +103,13 @@ def visualize_tree(tree,features_list):
     """
     command = ["dot", "-Tpng", "plots/dt_titanic.dot", "-o", "plots/dt_titanic.png"];
     try:
-        with open("plots/dt_titanic.dot", 'w') as f:
+        with open("plots/dt_titanic_old.dot", 'w') as f:
             export_graphviz(tree, out_file=f, feature_names=features_list,filled=True, rounded=True,  special_characters=True);
        
     except:
         # Creates a directory if the plots directory does not exista
         subprocess.call(["mkdir", "plots"],shell=True);
-        with open("plots/dt_titanic.dot", 'w') as f:
+        with open("plots/dt_titanic_old.dot", 'w') as f:
             export_graphviz(tree, out_file=f, feature_names=features_list,filled=True, rounded=True,  special_characters=True);
 
     try:

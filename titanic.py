@@ -3,9 +3,9 @@ import pandas as pd
 
 
 # RMS Titanic data visualization code 
-from visualizations import survival_stats
 
-from IPython.display import display
+
+# from IPython.display import display
 #matplotlib inline
 
 # Load the dataset
@@ -18,7 +18,10 @@ data = full_data.drop('Survived', axis = 1); # Survived is not a feature so remo
 
 # Load the test test
 in_file_test='data/test.csv';
+
 # Test set does not have any 'Survived' column.
+
+
 # Convert csv file to panadas data frame
 test_data=pd.read_csv(in_file_test);
 
@@ -27,14 +30,14 @@ def start():
     print 'Starting Titanic data exploration....';
     
     # Print the first few entries of the RMS Titanic data
-    display(full_data.head());
+    print(full_data.head());
     
     
     # Number of passengers
     print 'Total number of passengers {}'.format(len(outcomes));
     
     # Show the new dataset with 'Survived' removed
-    display(data.head());
+    print(data.head());
 
     return
 
