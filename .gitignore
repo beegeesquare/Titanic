@@ -1,5 +1,10 @@
-.pyc
+# Ignore all the .pyc files
+*.pyc
+# Ignore the data directory. Data can downloaded from Kaggle
 data
-.pdf
-.tar.gz
+# Ignore any pdf files
+*.pdf
+# Ignore any archive files
+*.tar.gz
+# Ignore the tmp directory
 tmp
